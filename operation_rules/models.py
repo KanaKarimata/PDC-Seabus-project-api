@@ -8,7 +8,6 @@ from django.contrib.auth.models import User
 class OperationRule(models.Model):
   operation_rule_id = models.AutoField(primary_key=True)
   operation_rule_name = models.CharField(max_length=300, null=False)
-  publish_status_id = models.IntegerField(default=0)
   delete_flg = models.BooleanField(default=False)
 
   def __str__(self):
@@ -47,6 +46,7 @@ class TimeSchedule(models.Model):
   time_schedule_id = models.AutoField(primary_key=True)
   operation_rule = models.ForeignKey(OperationRule, on_delete=models.CASCADE)
   time_schedule_name = models.CharField(max_length=400, null=False)
+  publish_status_id = models.IntegerField(default=0)
   time_schedule_detail = models.ForeignKey(TimeScheduleDetail, models.DO_NOTHING)
   publish_start_date = models.DateTimeField(null=True, blank=True)
   publish_end_date = models.DateTimeField(null=True, blank=True)
