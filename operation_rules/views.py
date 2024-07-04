@@ -1,12 +1,8 @@
-from rest_framework import viewsets
+from rest_framework import generics
 
-from .models import OperationRule, TimeSchedule
-from .serializers import OperationRuleSerializer, TimeScheduleSerializer
+from .models import TimeSchedule
+from .serializers import TimeScheduleSerializer
 
-class OperationRuleSet(viewsets.ModelViewSet):
-  queryset = OperationRule.objects.all()
-  serializer_class = OperationRuleSerializer
-
-class TimeScheduleSet(viewsets.ModelViewSet):
-  queryset = TimeSchedule.objects.prefetch_related('time_schedule_detail_set').all()
+class TimeScheduleCreateView(generics.CreateAPIView):
+  queryset = TimeSchedule.objects.all()
   serializer_class = TimeScheduleSerializer
