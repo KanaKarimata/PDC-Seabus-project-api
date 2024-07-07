@@ -1,6 +1,6 @@
 from django.urls import path
-from .view import TimeScheduleCreateView
+from .views import TimeScheduleCreateView
 
 urlpatterns = [
-    path('time-schedule-create/', TimeScheduleCreateView.as_View(), name='time-schedule-create')
+    path('time-schedule-create/', TimeScheduleCreateView.as_view(), name='time-schedule-create')
 ]

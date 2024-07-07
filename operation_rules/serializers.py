@@ -1,4 +1,4 @@
-from rest_framework import serializars
+from rest_framework import serializers
 from .models import TimeScheduleDetail, TimeSchedule
 
 class TimeScheduleDetailSerializer(serializers.ModelSerializer):
@@ -7,7 +7,7 @@ class TimeScheduleDetailSerializer(serializers.ModelSerializer):
     fields = ['id', 'departure_time', 'operation_status_id', 'operation_status_detail_id', 'detail_comment', 'memo']
 
 class TimeScheduleSerializer(serializers.ModelSerializer):
-  time_schedule_detail = TimeScheduleDetailSerializer(read_only = True, many=True)
+  time_schedule_detail = TimeScheduleDetailSerializer(many=True)
 
   class Meta:
     model = TimeSchedule
