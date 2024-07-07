@@ -1,7 +1,13 @@
 from rest_framework import generics
 
-from .models import TimeSchedule
-from .serializers import TimeScheduleSerializer
+from .models import TimeSchedule, OperationRule
+from .serializers import TimeScheduleSerializer, OperationRuleSerializer
+
+class OperationRuleListView(generics.ListAPIView):
+  serializer_class = OperationRuleSerializer
+
+  def get_queryset(self):
+    return OperationRule.objects.filter(delete_flg=False)
 
 class TimeScheduleCreateView(generics.CreateAPIView):
   queryset = TimeSchedule.objects.all()

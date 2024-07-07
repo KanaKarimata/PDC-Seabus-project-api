@@ -1,5 +1,10 @@
 from rest_framework import serializers
-from .models import TimeScheduleDetail, TimeSchedule
+from .models import TimeScheduleDetail, TimeSchedule, OperationRule
+
+class OperationRuleSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = OperationRule
+    fields = ['id', 'operation_rule_name']
 
 class TimeScheduleDetailSerializer(serializers.ModelSerializer):
   class Meta:
