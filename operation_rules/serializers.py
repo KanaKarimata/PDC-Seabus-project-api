@@ -1,10 +1,20 @@
 from rest_framework import serializers
-from .models import TimeScheduleDetail, TimeSchedule, OperationRule
+from .models import TimeScheduleDetail, TimeSchedule, OperationRule, UserEditPermission
+
+class UserEditPermissionSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = UserEditPermission
+    fields = ['edit_permission']
 
 class OperationRuleSerializer(serializers.ModelSerializer):
   class Meta:
     model = OperationRule
     fields = ['id', 'operation_rule_name']
+  
+  def get_user_edit_permissions(self, obj):
+    user = self.context(['request']).user
+    user_edit_permissions = UserEditPermission.objects.filter(user=user)
+    return UserEditPermissionSerializer(user_edit_permissions, many=True).data
 
 class TimeScheduleDetailSerializer(serializers.ModelSerializer):
   class Meta:

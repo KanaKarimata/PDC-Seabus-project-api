@@ -55,3 +55,20 @@ class TimeScheduleDetail(models.Model):
   detail_comment = models.CharField(max_length=40, null=True)
   memo = models.CharField(max_length=500, null=True)
 
+# 編集権限テーブル
+class EditPermission(models.Model):
+  edit_permission_name = models.CharField(max_length=300, unique=True)
+
+  def __str__(self):
+    return self.edit_permission_name
+
+# ユーザー権限テーブル
+class UserEditPermission(models.Model):
+  user = models.ForeignKey(User, models.DO_NOTHING)
+  edit_permission = models.ForeignKey(EditPermission, on_delete=models.CASCADE)
+
+  class Meta:
+    unique_together = ('user', 'edit_permission')
+
+    def __str__(self):
+      return f"{self.user.username} - {self.edit_permission.edit_permission_name}"
