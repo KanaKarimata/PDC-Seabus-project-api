@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from datetime import datetime, timezone
 from .models import TimeScheduleDetail, TimeSchedule, OperationRule, UserEditPermission, EditPermission
 from django.contrib.auth.models import User
 
@@ -31,6 +32,7 @@ class OperationRuleSerializer(serializers.ModelSerializer):
 
 class TimeScheduleSerializer(serializers.ModelSerializer):
   update_user = UserSerializer(read_only=True)
+  # operation_rule_name = serializers.CharField(source='operation_rule.name', read_only=True)
 
   class Meta:
     model = TimeSchedule

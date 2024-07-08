@@ -33,7 +33,7 @@ class TimeScheduleListView(generics.ListAPIView):
   serializer_class = TimeScheduleSerializer
 
   def get_queryset(self):
-    operation_rule_id = self.request.query_params.get('id')
+    operation_rule_id = self.request.query_params.get('operation_rule_id')
 
     if operation_rule_id is None:
       raise ValueError("idパラメータが不正です")
@@ -42,6 +42,22 @@ class TimeScheduleListView(generics.ListAPIView):
       return TimeSchedule.objects.filter(operation_rule_id=operation_rule_id, delete_flg=False)
     except ValueError as e:
       return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+
+  def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+
+        operation_rule_id = request.query_params.get('operation_rule_id')
+        operation_rule_name = None
+        if operation_rule_id:
+            operation_rule = OperationRule.objects.filter(id=operation_rule_id).first()
+            if operation_rule:
+                operation_rule_name = operation_rule.operation_rule_name
+
+        return Response({
+            'operation_rule_name': operation_rule_name,
+            'schedules': serializer.data
+        }, status=status.HTTP_200_OK)
 
 # 時刻表作成
 class TimeScheduleCreateView(generics.CreateAPIView):
