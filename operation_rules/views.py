@@ -1,17 +1,18 @@
-from rest_framework import generics
+from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from .models import TimeSchedule, OperationRule, UserEditPermission
 from .serializers import TimeScheduleSerializer, OperationRuleSerializer, UserEditPermissionSerializer
 
+# 運航ルール一覧表示
 class OperationRuleListView(generics.ListAPIView):
   permission_classes = [IsAuthenticated]
   serializer_class = OperationRuleSerializer
 
   def get_queryset(self):
     return OperationRule.objects.filter(delete_flg=False)
-  
+
   def get(self, request, *args, **kwargs):
     try:
       response = super().get(request, *args, **kwargs)
@@ -25,7 +26,25 @@ class OperationRuleListView(generics.ListAPIView):
     except Exception as e:
       return Response({'error': str(e)}, status=500)
 
+# 時刻表一覧表示
+class TimeScheduleListView(generics.ListAPIView):
+  permission_classes = [IsAuthenticated]
+  serializer_class = TimeScheduleSerializer
+
+  def get_queryset(self):
+    operation_rule_id = self.request.query_params.get('id')
+
+    if operation_rule_id is None:
+      raise ValueError("idパラメータが不正です")
+
+    try:
+      return TimeSchedule.objects.filter(operation_rule_id=operation_rule_id, delete_flg=False)
+    except ValueError as e:
+      return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+
+# 時刻表作成
 class TimeScheduleCreateView(generics.CreateAPIView):
+  permission_classes = [IsAuthenticated]
   queryset = TimeSchedule.objects.all()
   serializer_class = TimeScheduleSerializer
 
@@ -36,3 +55,12 @@ class TimeScheduleCreateView(generics.CreateAPIView):
     self.perform_create(serializer)
     headers = self.get_success_headers(serializer.data)
     return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
+
+  def perform_create(self, serializer):
+    serializer.save(update_user=self.request.user)
+
+  def get_success_headers(self, data):
+    try:
+        return {'Location': str(data[api_settings.URL_FIELD_NAME])}
+    except (TypeError, KeyError):
+        return {}

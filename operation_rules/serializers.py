@@ -1,5 +1,11 @@
 from rest_framework import serializers
 from .models import TimeScheduleDetail, TimeSchedule, OperationRule, UserEditPermission, EditPermission
+from django.contrib.auth.models import User
+
+class UserSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = User
+    fields = ['username']
 
 class EditPermissionSerializer(serializers.ModelSerializer):
   class Meta:
@@ -17,7 +23,7 @@ class OperationRuleSerializer(serializers.ModelSerializer):
   class Meta:
     model = OperationRule
     fields = ['id', 'operation_rule_name']
-  
+
   def get_user_edit_permissions(self, obj):
     user = self.context(['request']).user
     user_edit_permissions = UserEditPermission.objects.filter(user=user)
@@ -29,6 +35,7 @@ class TimeScheduleDetailSerializer(serializers.ModelSerializer):
     fields = ['id', 'departure_time', 'operation_status_id', 'operation_status_detail_id', 'detail_comment', 'memo']
 
 class TimeScheduleSerializer(serializers.ModelSerializer):
+  update_user = UserSerializer(read_only=True)
   time_schedule_detail = TimeScheduleDetailSerializer(many=True)
 
   class Meta:
