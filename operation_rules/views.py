@@ -1,8 +1,9 @@
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from rest_framework.settings import api_settings
 
-from .models import TimeSchedule, OperationRule, UserEditPermission
+from .models import TimeSchedule, OperationRule, UserEditPermission, TimeScheduleDetail
 from .serializers import TimeScheduleSerializer, OperationRuleSerializer, UserEditPermissionSerializer
 
 # 運航ルール一覧表示
@@ -45,19 +46,24 @@ class TimeScheduleListView(generics.ListAPIView):
 # 時刻表作成
 class TimeScheduleCreateView(generics.CreateAPIView):
   permission_classes = [IsAuthenticated]
-  queryset = TimeSchedule.objects.all()
   serializer_class = TimeScheduleSerializer
 
   def create(self, request, *args, **kwargs):
-    print("Received data:", request.data)  # デバッグ用
     serializer = self.get_serializer(data=request.data)
+    print("Received data:", request.data)  # デバッグ用
     serializer.is_valid(raise_exception=True)
-    self.perform_create(serializer)
+    time_schedule_instance = self.perform_create(serializer)
+    
+    # Create TimeScheduleDetail instances
+    time_schedule_details = request.data.get('time_schedule_detail', [])
+    for detail_data in time_schedule_details:
+      TimeScheduleDetail.objects.create(time_schedule=time_schedule_instance, **detail_data)
+
     headers = self.get_success_headers(serializer.data)
     return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
   def perform_create(self, serializer):
-    serializer.save(update_user=self.request.user)
+    return serializer.save(update_user=self.request.user)
 
   def get_success_headers(self, data):
     try:
