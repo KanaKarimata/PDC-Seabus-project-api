@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.settings import api_settings
 
 from .models import TimeSchedule, OperationRule, UserEditPermission, TimeScheduleDetail
-from .serializers import TimeScheduleSerializer, OperationRuleSerializer, UserEditPermissionSerializer
+from .serializers import TimeScheduleSerializer, OperationRuleSerializer, UserEditPermissionSerializer, TimeScheduleDetailSerializer
 
 # 運航ルール一覧表示
 class OperationRuleListView(generics.ListAPIView):
@@ -58,6 +58,38 @@ class TimeScheduleListView(generics.ListAPIView):
             'operation_rule_name': operation_rule_name,
             'schedules': serializer.data
         }, status=status.HTTP_200_OK)
+
+# 時刻表詳細一覧表示
+class TimeScheduleDetailListView(generics.ListAPIView):
+  permission_classes = [IsAuthenticated]
+  serializer_class = TimeScheduleDetailSerializer
+
+  def get_queryset(self):
+    time_schedule_id = self.request.query_params.get('time_schedule_id')
+
+    if time_schedule_id is None:
+      raise ValueError("idパラメータが不正です")
+
+    try:
+      return TimeScheduleDetail.objects.filter(time_schedule_id=time_schedule_id)
+    except ValueError as e:
+      return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+    
+  def list(self, request, *args, **kwargs):
+    queryset = self.get_queryset()
+    serializer = self.get_serializer(queryset, many=True)
+
+    time_schedule_id = request.query_params.get('time_schedule_id')
+    time_schedule_name = None
+    if time_schedule_id:
+        time_schedule = TimeSchedule.objects.filter(id=time_schedule_id).first()
+        if time_schedule:
+            time_schedule_name = time_schedule.time_schedule_name
+
+    return Response({
+        'time_schedule_name': time_schedule_name,
+        'scheduleDetails': serializer.data
+    }, status=status.HTTP_200_OK)
 
 # 時刻表作成
 class TimeScheduleCreateView(generics.CreateAPIView):
