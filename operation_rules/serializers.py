@@ -1,6 +1,5 @@
 from rest_framework import serializers
-from datetime import datetime, timezone
-from .models import TimeScheduleDetail, TimeSchedule, OperationRule, UserEditPermission, EditPermission
+from .models import TimeScheduleDetail, TimeSchedule, OperationRule, UserEditPermission, EditPermission, OperationStatus, OperationStatusDetail
 from django.contrib.auth.models import User
 
 class UserSerializer(serializers.ModelSerializer):
@@ -47,3 +46,13 @@ class TimeScheduleDetailSerializer(serializers.ModelSerializer):
   class Meta:
     model = TimeScheduleDetail
     fields = ['id', 'time_schedule', 'departure_time', 'operation_status_id', 'operation_status_detail_id', 'detail_comment', 'memo']
+
+class OperationStatusMasterSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = OperationStatus
+    fields = ['id', 'operations_status_type']
+
+class OperationStatusDetailMasterSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = OperationStatusDetail
+    fields = ['id', 'operation_status_detail']

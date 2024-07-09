@@ -3,8 +3,8 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
 
-from .models import TimeSchedule, OperationRule, UserEditPermission, TimeScheduleDetail
-from .serializers import TimeScheduleSerializer, OperationRuleSerializer, UserEditPermissionSerializer, TimeScheduleDetailSerializer
+from .models import TimeSchedule, OperationRule, UserEditPermission, TimeScheduleDetail, OperationStatus, OperationStatusDetail
+from .serializers import TimeScheduleSerializer, OperationRuleSerializer, UserEditPermissionSerializer, TimeScheduleDetailSerializer, OperationStatusMasterSerializer, OperationStatusDetailMasterSerializer
 
 # 運航ルール一覧表示
 class OperationRuleListView(generics.ListAPIView):
@@ -66,6 +66,7 @@ class TimeScheduleDetailListView(generics.ListAPIView):
 
   def get_queryset(self):
     time_schedule_id = self.request.query_params.get('time_schedule_id')
+    print(time_schedule_id)
 
     if time_schedule_id is None:
       raise ValueError("idパラメータが不正です")
@@ -80,15 +81,25 @@ class TimeScheduleDetailListView(generics.ListAPIView):
     serializer = self.get_serializer(queryset, many=True)
 
     time_schedule_id = request.query_params.get('time_schedule_id')
-    time_schedule_name = None
+    time_schedule = None
     if time_schedule_id:
         time_schedule = TimeSchedule.objects.filter(id=time_schedule_id).first()
         if time_schedule:
-            time_schedule_name = time_schedule.time_schedule_name
+            time_schedule_serializer = TimeScheduleSerializer(time_schedule)
+
+    operation_status_queryset = OperationStatus.objects.filter(delete_flg=False)
+    operation_status_serializer = OperationStatusMasterSerializer(operation_status_queryset, many=True)
+    operation_status_data = operation_status_serializer.data
+
+    operation_status_detail_queryset = OperationStatusDetail.objects.filter(delete_flg=False)
+    operation_status_detail_serializer = OperationStatusDetailMasterSerializer(operation_status_detail_queryset, many=True)
+    operation_status_detail_data = operation_status_detail_serializer.data
 
     return Response({
-        'time_schedule_name': time_schedule_name,
-        'scheduleDetails': serializer.data
+      'time_schedule': time_schedule_serializer.data if time_schedule else None,
+      'scheduleDetails': serializer.data,
+      'operation_status': operation_status_data,
+      'operation_status_detail': operation_status_detail_data
     }, status=status.HTTP_200_OK)
 
 # 時刻表作成
@@ -118,3 +129,20 @@ class TimeScheduleCreateView(generics.CreateAPIView):
         return {'Location': str(data[api_settings.URL_FIELD_NAME])}
     except (TypeError, KeyError):
         return {}
+
+class OperationStatusListView(generics.ListAPIView):
+  permission_classes = [IsAuthenticated]
+  
+  def get(self, request, *args, **kwargs):
+    operation_status_queryset = OperationStatus.objects.filter(delete_flg=False)
+    operation_status_serializer = OperationStatusMasterSerializer(operation_status_queryset, many=True)
+    operation_status_data = operation_status_serializer.data
+
+    operation_status_detail_queryset = OperationStatusDetail.objects.filter(delete_flg=False)
+    operation_status_detail_serializer = OperationStatusDetailMasterSerializer(operation_status_detail_queryset, many=True)
+    operation_status_detail_data = operation_status_detail_serializer.data
+
+    return Response({
+      'operation_status': operation_status_data,
+      'operation_status_detail': operation_status_detail_data
+    }, status=status.HTTP_200_OK)
