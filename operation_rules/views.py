@@ -2,6 +2,7 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
+from django.db import transaction
 
 from .models import TimeSchedule, OperationRule, UserEditPermission, TimeScheduleDetail, OperationStatus, OperationStatusDetail
 from .serializers import TimeScheduleSerializer, OperationRuleSerializer, UserEditPermissionSerializer, TimeScheduleDetailSerializer, OperationStatusMasterSerializer, OperationStatusDetailMasterSerializer
@@ -95,6 +96,8 @@ class TimeScheduleDetailListView(generics.ListAPIView):
     operation_status_detail_serializer = OperationStatusDetailMasterSerializer(operation_status_detail_queryset, many=True)
     operation_status_detail_data = operation_status_detail_serializer.data
 
+    print("Throwing data:", serializer.data)
+
     return Response({
       'time_schedule': time_schedule_serializer.data if time_schedule else None,
       'scheduleDetails': serializer.data,
@@ -130,6 +133,57 @@ class TimeScheduleCreateView(generics.CreateAPIView):
     except (TypeError, KeyError):
         return {}
 
+# 時刻表更新処理
+class TimeScheduleUpdateView(generics.UpdateAPIView):
+  permission_classes = [IsAuthenticated]
+  serializer_class = TimeScheduleSerializer
+
+  def get_queryset(self):
+     return TimeSchedule.objects.all()
+  
+  def perform_update(self, serializer):
+     serializer.save(update_user=self.request.user)
+  
+  def update(self, request, *arg, **kwargs):
+    print("update:", request.data)  # デバッグ用
+    instance = self.get_object()
+    print("instance:", request.data)  # デバッグ用
+    serializer = self.get_serializer(instance, data=request.data)
+    print("serializer:", request.data)  # デバッグ用
+    serializer.is_valid(raise_exception=True)
+    print("error:", serializer.errors)
+    print("is_valid:", request.data)  # デバッグ用
+    self.perform_update(serializer)
+    print("perform_update:", request.data)  # デバッグ用
+
+    with transaction.atomic():
+      self.perform_update(serializer)
+
+      time_schedule_details = request.data.get('time_schedule_detail', [])
+      print("get:", request.data)  # デバッグ用
+
+      for detail_data in time_schedule_details:
+        if detail_data['id'] is not None:
+          TimeScheduleDetail.objects.filter(id=detail_data['id']).update(
+            departure_time=detail_data.get('departure_time'),
+            operation_status_id=detail_data.get('operation_status_id'),
+            operation_status_detail_id=detail_data.get('operation_status_detail_id'),
+            detail_comment=detail_data.get('detail_comment'),
+            memo=detail_data.get('memo')
+          )
+        else:
+          TimeScheduleDetail.objects.create(
+              time_schedule=instance,
+              departure_time=detail_data.get('departure_time'),
+              operation_status_id=detail_data.get('operation_status_id'),
+              operation_status_detail_id=detail_data.get('operation_status_detail_id'),
+              detail_comment=detail_data.get('detail_comment'),
+              memo=detail_data.get('memo')
+          )
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+# マスタデータ取得
 class OperationStatusListView(generics.ListAPIView):
   permission_classes = [IsAuthenticated]
   

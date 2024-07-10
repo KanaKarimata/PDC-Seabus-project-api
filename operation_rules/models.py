@@ -49,7 +49,7 @@ class TimeSchedule(models.Model):
 # スケジュール詳細テーブル
 class TimeScheduleDetail(models.Model):
   time_schedule = models.ForeignKey(TimeSchedule, on_delete=models.CASCADE)
-  departure_time = models.DateTimeField(null=True, blank=True)
+  departure_time = models.TimeField(null=True, blank=True)
   operation_status_id = models.IntegerField(null=True, blank=True)
   operation_status_detail_id = models.IntegerField(null=True, blank=True)
   detail_comment = models.CharField(max_length=40, null=True, blank=True)

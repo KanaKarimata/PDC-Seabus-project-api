@@ -38,10 +38,10 @@ class TimeScheduleSerializer(serializers.ModelSerializer):
     fields = ['id', 'operation_rule', 'time_schedule_name', 'publish_status_id', 'out_of_service_flg',  'publish_start_date', 'publish_end_date', 'update_user', 'delete_flg']
 
 class TimeScheduleDetailSerializer(serializers.ModelSerializer):
-  departure_time = serializers.DateTimeField(allow_null=True, required=False)
+  departure_time = serializers.TimeField(allow_null=True, required=False)
   detail_comment = serializers.CharField(allow_null=True, required=False)
   memo = serializers.CharField(allow_null=True, required=False)
-  time_schedule = TimeScheduleSerializer(required=True)
+  time_schedule = serializers.PrimaryKeyRelatedField(queryset=TimeSchedule.objects.all())
 
   class Meta:
     model = TimeScheduleDetail
