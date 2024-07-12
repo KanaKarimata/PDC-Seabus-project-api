@@ -19,6 +19,17 @@ class UserEditPermissionSerializer(serializers.ModelSerializer):
     model = UserEditPermission
     fields = ['edit_permission']
 
+
+class OperationStatusMasterSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = OperationStatus
+    fields = ['id', 'operations_status_type']
+
+class OperationStatusDetailMasterSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = OperationStatusDetail
+    fields = ['id', 'operation_status_detail']
+
 class OperationRuleSerializer(serializers.ModelSerializer):
   class Meta:
     model = OperationRule
@@ -42,17 +53,12 @@ class TimeScheduleDetailSerializer(serializers.ModelSerializer):
   detail_comment = serializers.CharField(allow_null=True, required=False)
   memo = serializers.CharField(allow_null=True, required=False)
   time_schedule = serializers.PrimaryKeyRelatedField(queryset=TimeSchedule.objects.all())
+  operation_status = serializers.PrimaryKeyRelatedField(queryset=OperationStatus.objects.all())
+  operation_status_detail = serializers.PrimaryKeyRelatedField(queryset=OperationStatusDetail.objects.all())
+
+  operation_status_info = OperationStatusMasterSerializer(source='operation_status', read_only=True)
+  operation_status_detail_info = OperationStatusDetailMasterSerializer(source='operation_status_detail', read_only=True)
 
   class Meta:
     model = TimeScheduleDetail
-    fields = ['id', 'time_schedule', 'departure_time', 'operation_status_id', 'operation_status_detail_id', 'detail_comment', 'memo']
-
-class OperationStatusMasterSerializer(serializers.ModelSerializer):
-  class Meta:
-    model = OperationStatus
-    fields = ['id', 'operations_status_type']
-
-class OperationStatusDetailMasterSerializer(serializers.ModelSerializer):
-  class Meta:
-    model = OperationStatusDetail
-    fields = ['id', 'operation_status_detail']
+    fields = ['id', 'time_schedule', 'departure_time', 'operation_status', 'operation_status_info', 'operation_status_detail_info', 'operation_status_detail', 'detail_comment', 'memo']

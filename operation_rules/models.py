@@ -50,8 +50,8 @@ class TimeSchedule(models.Model):
 class TimeScheduleDetail(models.Model):
   time_schedule = models.ForeignKey(TimeSchedule, on_delete=models.CASCADE)
   departure_time = models.TimeField(null=True, blank=True)
-  operation_status_id = models.IntegerField(null=True, blank=True)
-  operation_status_detail_id = models.IntegerField(null=True, blank=True)
+  operation_status = models.ForeignKey(OperationStatus, on_delete=models.SET_NULL, null=True, blank=True, related_name='time_schedule_details')
+  operation_status_detail = models.ForeignKey(OperationStatusDetail, on_delete=models.SET_NULL, null=True, blank=True, related_name='time_schedule_details')
   detail_comment = models.CharField(max_length=40, null=True, blank=True)
   memo = models.CharField(max_length=500, null=True, blank=True)
 
