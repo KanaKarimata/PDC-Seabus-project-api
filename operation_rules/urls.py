@@ -1,5 +1,5 @@
 from django.urls import path
-from .views import TimeScheduleCreateView, OperationRuleListView, TimeScheduleListView, TimeScheduleDetailListView, OperationStatusListView, TimeScheduleUpdateView, OperationRuleView
+from .views import TimeScheduleCreateView, OperationRuleListView, TimeScheduleListView, TimeScheduleDetailListView, OperationStatusListView, TimeScheduleUpdateView, OperationRuleView, TimeScheduleDestroyView
 
 urlpatterns = [
     path('time-schedule-create/', TimeScheduleCreateView.as_view(), name='time-schedule-create'),
@@ -8,5 +8,6 @@ urlpatterns = [
     path('time-schedule-detail/index/', TimeScheduleDetailListView.as_view(), name="time-schedule-detail-index"),
     path('time-schedule/master/', OperationStatusListView.as_view(), name="time-schedule-master"),
     path('time-schedule-update/<int:pk>/', TimeScheduleUpdateView.as_view(), name="time-schedule-update"),
-    path('info/<int:pk>/', OperationRuleView.as_view(), name='info')
+    path('info/<int:pk>/', OperationRuleView.as_view(), name='info'),
+    path('time-schedule/delete/<int:pk>/', TimeScheduleDestroyView.as_view(), name='time-schedule-delete'),
 ]

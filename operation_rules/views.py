@@ -217,3 +217,13 @@ class OperationStatusListView(generics.ListAPIView):
       'operation_status': operation_status_data,
       'operation_status_detail': operation_status_detail_data
     }, status=status.HTTP_200_OK)
+
+# 時刻表削除処理
+class TimeScheduleDestroyView(generics.DestroyAPIView):
+  permission_classes = [IsAuthenticated]
+  serializer_class = TimeScheduleSerializer
+
+  def get_queryset(self):
+    id = self.kwargs['pk']
+    return TimeSchedule.objects.filter(id=id)
+
