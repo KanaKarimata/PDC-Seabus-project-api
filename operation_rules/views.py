@@ -28,6 +28,23 @@ class OperationRuleListView(generics.ListAPIView):
     except Exception as e:
       return Response({'error': str(e)}, status=500)
 
+# 運航ルール名表示
+class OperationRuleView(generics.RetrieveAPIView):
+  permission_classes = [IsAuthenticated]
+  serializer_class = OperationRuleSerializer
+  lookup_field = 'pk'
+
+  def get_queryset(self):
+    operation_rule_id = self.kwargs.get('pk')
+
+    if operation_rule_id is None:
+      raise ValueError("idパラメータが不正です")
+
+    try:
+      return OperationRule.objects.filter(id=operation_rule_id, delete_flg=False)
+    except ValueError as e:
+      return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
+
 # 時刻表一覧表示
 class TimeScheduleListView(generics.ListAPIView):
   permission_classes = [IsAuthenticated]
