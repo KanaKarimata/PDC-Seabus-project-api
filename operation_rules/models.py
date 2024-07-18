@@ -20,6 +20,13 @@ class OperationStatusDetail(models.Model):
   def __str__(self):
     return self.operation_status_detail
 
+# 出発地マスタ
+class Destination(models.Model):
+  destination_name = models.CharField(max_length=50, null=False)
+
+  def __str__(self):
+    return self.destination_name
+
 # 運行ルールテーブル
 class OperationRule(models.Model):
   operation_rule_name = models.CharField(max_length=300, null=False)
@@ -32,10 +39,12 @@ class OperationRule(models.Model):
 class TimeSchedule(models.Model):
   operation_rule = models.ForeignKey(OperationRule, on_delete=models.CASCADE)
   time_schedule_name = models.CharField(max_length=400, null=False)
+  destination = models.ForeignKey(Destination, models.DO_NOTHING, default=0)
   publish_status_id = models.IntegerField(default=0)
   out_of_service_flg = models.BooleanField(default=False)
   publish_start_date = models.DateTimeField(null=True, blank=True)
   publish_end_date = models.DateTimeField(null=True, blank=True)
+  publish_holiday_flg = models.BooleanField(default=False)
   update_user = models.ForeignKey(User, models.DO_NOTHING)
   delete_flg = models.BooleanField(default=False)
 

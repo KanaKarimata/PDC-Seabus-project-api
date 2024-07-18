@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import TimeScheduleDetail, TimeSchedule, OperationRule, UserEditPermission, EditPermission, OperationStatus, OperationStatusDetail
+from .models import TimeScheduleDetail, TimeSchedule, OperationRule, UserEditPermission, EditPermission, OperationStatus, OperationStatusDetail, Destination
 from django.contrib.auth.models import User
 
 class UserSerializer(serializers.ModelSerializer):
@@ -19,6 +19,10 @@ class UserEditPermissionSerializer(serializers.ModelSerializer):
     model = UserEditPermission
     fields = ['edit_permission']
 
+class DestinationMasterSerializer(serializers.ModelSerializer):
+  class Meta:
+    model = Destination
+    fields = ['id', 'destination_name']
 
 class OperationStatusMasterSerializer(serializers.ModelSerializer):
   class Meta:
@@ -42,11 +46,10 @@ class OperationRuleSerializer(serializers.ModelSerializer):
 
 class TimeScheduleSerializer(serializers.ModelSerializer):
   update_user = UserSerializer(read_only=True)
-  # operation_rule_name = serializers.CharField(source='operation_rule.name', read_only=True)
 
   class Meta:
     model = TimeSchedule
-    fields = ['id', 'operation_rule', 'time_schedule_name', 'publish_status_id', 'out_of_service_flg',  'publish_start_date', 'publish_end_date', 'update_user', 'delete_flg']
+    fields = ['id', 'operation_rule', 'time_schedule_name', 'destination', 'publish_status_id', 'out_of_service_flg', 'publish_holiday_flg', 'publish_start_date', 'publish_end_date', 'update_user', 'delete_flg']
 
 class TimeScheduleDetailSerializer(serializers.ModelSerializer):
   departure_time = serializers.TimeField(allow_null=True, required=False)
