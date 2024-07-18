@@ -272,7 +272,7 @@ class SignageTimeScheduleListView(generics.ListAPIView):
         time_schedule = TimeSchedule.objects.filter(
                   id=time_schedule_id,
                   operation_rule_id=operation_rule_id,
-                  publish_holiday_flg=True,
+                  publish_holiday_flg=False,
                   publish_status_id=1)
 
         if time_schedule:
