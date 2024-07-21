@@ -2,8 +2,10 @@ from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.settings import api_settings
+from django.shortcuts import get_object_or_404
 from django.db import transaction
 from datetime import datetime
+from django.utils import timezone
 
 from .models import TimeSchedule, OperationRule, UserEditPermission, TimeScheduleDetail, OperationStatus, OperationStatusDetail, Destination
 from .serializers import TimeScheduleSerializer, OperationRuleSerializer, UserEditPermissionSerializer, TimeScheduleDetailSerializer, OperationStatusMasterSerializer, OperationStatusDetailMasterSerializer, DestinationMasterSerializer
@@ -171,7 +173,6 @@ class TimeScheduleUpdateView(generics.UpdateAPIView):
     instance = self.get_object()
     serializer = self.get_serializer(instance, data=request.data)
     serializer.is_valid(raise_exception=True)
-    self.perform_update(serializer)
 
     with transaction.atomic():
       self.perform_update(serializer)
@@ -304,3 +305,55 @@ class SignageTimeScheduleListView(generics.ListAPIView):
       'time_schedule': time_schedule_serializer.data if time_schedule else None,
       'scheduleDetails': serializer.data
     }, status=status.HTTP_200_OK)
+
+# デジタルサイネージ用次の出発時刻データ取得
+class SignageNextDepartureListView(generics.ListAPIView):
+  serializer_class = TimeScheduleDetailSerializer
+
+  def get_queryset(self):
+    operation_rule_id = self.kwargs['operation_rule_id']
+    destination = self.kwargs['destination']
+    now = timezone.localtime(timezone.now()).time().strftime('%H:%M')
+
+    operation_rule = get_object_or_404(OperationRule, id=operation_rule_id)
+
+    today = datetime.now()
+    weekday = today.weekday()
+    time_schedules = None
+
+    if (weekday == 5) or (weekday == 6):
+      time_schedules = TimeSchedule.objects.filter(
+              operation_rule=operation_rule,
+              destination=destination,
+              publish_holiday_flg=True,
+              publish_status_id=1)
+    else:
+      time_schedules = TimeSchedule.objects.filter(
+            operation_rule=operation_rule,
+            destination=destination,
+            publish_holiday_flg=False,
+            publish_status_id=1)
+
+    time_schedule_details = TimeScheduleDetail.objects.filter(
+        time_schedule__in=time_schedules,
+        operation_status=1,
+        departure_time__gt=now
+    ).order_by('departure_time')
+    print('Got time_schedule_details', time_schedule_details)
+
+    # 現在の時刻よりも直後の時刻を取得
+    if time_schedule_details.exists():
+        # 最初のレコードを取得
+        first_departure = time_schedule_details.first()
+        return TimeScheduleDetail.objects.filter(
+            id=first_departure.id
+        )
+    return TimeScheduleDetail.objects.none()
+
+  def get(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+        if queryset.exists():
+            serializer = self.get_serializer(queryset.first())
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        else:
+            return Response({'next_departure_time': None}, status=status.HTTP_200_OK)
