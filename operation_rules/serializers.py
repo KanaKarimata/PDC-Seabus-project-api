@@ -46,6 +46,7 @@ class OperationRuleSerializer(serializers.ModelSerializer):
 
 class TimeScheduleSerializer(serializers.ModelSerializer):
   update_user = UserSerializer(read_only=True)
+  operation_rule = serializers.PrimaryKeyRelatedField(queryset=OperationRule.objects.all())
 
   class Meta:
     model = TimeSchedule

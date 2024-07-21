@@ -256,6 +256,7 @@ class SignageTimeScheduleListView(generics.ListAPIView):
     time_schedule_id = request.query_params.get('time_schedule_id')
     operation_rule_id = request.query_params.get('operation_rule_id')
     time_schedule = None
+    time_schedule_serializer = None
 
     if time_schedule_id and operation_rule_id:
       today = datetime.now()
@@ -266,14 +267,14 @@ class SignageTimeScheduleListView(generics.ListAPIView):
                   id=time_schedule_id,
                   operation_rule_id=operation_rule_id,
                   publish_holiday_flg=True,
-                  publish_status_id=1)
+                  publish_status_id=1).first()
       # 平日の場合
       else:
         time_schedule = TimeSchedule.objects.filter(
                   id=time_schedule_id,
                   operation_rule_id=operation_rule_id,
                   publish_holiday_flg=False,
-                  publish_status_id=1)
+                  publish_status_id=1).first()
 
         if time_schedule:
             time_schedule_serializer = TimeScheduleSerializer(time_schedule)
