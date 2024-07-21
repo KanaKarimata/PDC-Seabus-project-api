@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from django.shortcuts import get_object_or_404
 from django.db import transaction
-from datetime import datetime
+from datetime import datetime,date
 from django.utils import timezone
 
 from .models import TimeSchedule, OperationRule, UserEditPermission, TimeScheduleDetail, OperationStatus, OperationStatusDetail, Destination
@@ -248,11 +248,14 @@ class SignageTimeScheduleListView(generics.ListAPIView):
     try:
       today = datetime.now()
       weekday = today.weekday()
+      today_date = date.today()
       # 土日の場合
       if (weekday == 5) or (weekday == 6):
         return TimeScheduleDetail.objects.filter(
           time_schedule_id=time_schedule_id,
           time_schedule__publish_holiday_flg=True,
+          time_schedule__publish_start_date__gte=today_date,
+          time_schedule__publish_end_date__lte=today_date,
           time_schedule__publish_status_id=1
         ).order_by('departure_time')
       # 平日の場合
@@ -260,6 +263,8 @@ class SignageTimeScheduleListView(generics.ListAPIView):
         return TimeScheduleDetail.objects.filter(
           time_schedule_id=time_schedule_id,
           time_schedule__publish_holiday_flg=False,
+          time_schedule__publish_start_date__gte=today_date,
+          time_schedule__publish_end_date__lte=today_date,
           time_schedule__publish_status_id=1
         ).order_by('departure_time')
     except ValueError as e:
@@ -319,6 +324,7 @@ class SignageNextDepartureListView(generics.ListAPIView):
 
     today = datetime.now()
     weekday = today.weekday()
+    today_date = date.today()
     time_schedules = None
 
     if (weekday == 5) or (weekday == 6):
@@ -326,6 +332,8 @@ class SignageNextDepartureListView(generics.ListAPIView):
               operation_rule=operation_rule,
               destination=destination,
               publish_holiday_flg=True,
+              time_schedule__publish_start_date__gte=today_date,
+              time_schedule__publish_end_date__lte=today_date,
               publish_status_id=1)
       print('Got time_schedule', time_schedules)
     else:
@@ -333,6 +341,8 @@ class SignageNextDepartureListView(generics.ListAPIView):
             operation_rule=operation_rule,
             destination=destination,
             publish_holiday_flg=False,
+            time_schedule__publish_start_date__gte=today_date,
+            time_schedule__publish_end_date__lte=today_date,
             publish_status_id=1)
       print('Got time_schedule', time_schedules)
 
