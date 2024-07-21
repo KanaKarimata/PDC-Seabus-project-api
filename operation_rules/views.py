@@ -327,12 +327,14 @@ class SignageNextDepartureListView(generics.ListAPIView):
               destination=destination,
               publish_holiday_flg=True,
               publish_status_id=1)
+      print('Got time_schedule', time_schedules)
     else:
       time_schedules = TimeSchedule.objects.filter(
             operation_rule=operation_rule,
             destination=destination,
             publish_holiday_flg=False,
             publish_status_id=1)
+      print('Got time_schedule', time_schedules)
 
     time_schedule_details = TimeScheduleDetail.objects.filter(
         time_schedule__in=time_schedules,
