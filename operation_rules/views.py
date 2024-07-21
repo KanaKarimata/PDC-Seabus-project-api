@@ -242,10 +242,25 @@ class SignageTimeScheduleListView(generics.ListAPIView):
     time_schedule_id = self.request.query_params.get('time_schedule_id')
 
     if time_schedule_id is None:
-      raise ValueError("idパラメータが不正です")
+        return TimeScheduleDetail.objects.none()
 
     try:
-      return TimeScheduleDetail.objects.filter(time_schedule_id=time_schedule_id)
+      today = datetime.now()
+      weekday = today.weekday()
+      # 土日の場合
+      if (weekday == 5) or (weekday == 6):
+        return TimeScheduleDetail.objects.filter(
+          time_schedule_id=time_schedule_id,
+          time_schedule__publish_holiday_flg=True,
+          time_schedule__publish_status_id=1
+        ).order_by('departure_time')
+      # 平日の場合
+      else:
+        return TimeScheduleDetail.objects.filter(
+          time_schedule_id=time_schedule_id,
+          time_schedule__publish_holiday_flg=False,
+          time_schedule__publish_status_id=1
+        ).order_by('departure_time')
     except ValueError as e:
       return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
@@ -268,6 +283,9 @@ class SignageTimeScheduleListView(generics.ListAPIView):
                   operation_rule_id=operation_rule_id,
                   publish_holiday_flg=True,
                   publish_status_id=1).first()
+        
+        if time_schedule:
+            time_schedule_serializer = TimeScheduleSerializer(time_schedule)
       # 平日の場合
       else:
         time_schedule = TimeSchedule.objects.filter(
@@ -280,6 +298,7 @@ class SignageTimeScheduleListView(generics.ListAPIView):
             time_schedule_serializer = TimeScheduleSerializer(time_schedule)
 
     print("Throwing data:", serializer.data)
+    print("Throwing data:", time_schedule_serializer.data if time_schedule_serializer else None)
 
     return Response({
       'time_schedule': time_schedule_serializer.data if time_schedule else None,

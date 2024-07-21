@@ -12,5 +12,5 @@ urlpatterns = [
     path('api/v1/', include('djoser.urls.jwt')),
     path('api/token/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
-    path('operation-rule/', include('operation_rules.urls'))
+    path('operation-rule/', include('operation_rules.urls')),
 ]
