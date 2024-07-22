@@ -4,8 +4,9 @@ from rest_framework.response import Response
 from rest_framework.settings import api_settings
 from django.shortcuts import get_object_or_404
 from django.db import transaction
-from datetime import datetime,date
-from django.utils import timezone
+from datetime import datetime, date, timezone
+import pytz
+from django.utils.timezone import localtime
 
 from .models import TimeSchedule, OperationRule, UserEditPermission, TimeScheduleDetail, OperationStatus, OperationStatusDetail, Destination
 from .serializers import TimeScheduleSerializer, OperationRuleSerializer, UserEditPermissionSerializer, TimeScheduleDetailSerializer, OperationStatusMasterSerializer, OperationStatusDetailMasterSerializer, DestinationMasterSerializer
@@ -150,7 +151,18 @@ class TimeScheduleCreateView(generics.CreateAPIView):
     return Response(serializer.data, status=status.HTTP_201_CREATED, headers=headers)
 
   def perform_create(self, serializer):
-    return serializer.save(update_user=self.request.user)
+    # 日本標準時（JST）のタイムゾーンを取得
+    jst = pytz.timezone('Asia/Tokyo')
+
+    publish_start_date = serializer.validated_data['publish_start_date'].astimezone(jst)
+    publish_end_date = serializer.validated_data['publish_end_date'].astimezone(jst)
+
+    # タイムゾーンをJSTに変更して保存
+    return serializer.save(
+        publish_start_date=publish_start_date,
+        publish_end_date=publish_end_date,
+        update_user=self.request.user
+    )
 
   def get_success_headers(self, data):
     try:
@@ -167,7 +179,17 @@ class TimeScheduleUpdateView(generics.UpdateAPIView):
      return TimeSchedule.objects.all()
 
   def perform_update(self, serializer):
-     serializer.save(update_user=self.request.user)
+     # 日本標準時（JST）のタイムゾーンを取得
+    jst = pytz.timezone('Asia/Tokyo')
+
+    publish_start_date = serializer.validated_data['publish_start_date'].astimezone(jst)
+    publish_end_date = serializer.validated_data['publish_end_date'].astimezone(jst)
+    # タイムゾーンをJSTに変更して保存
+    serializer.save(
+        publish_start_date=publish_start_date,
+        publish_end_date=publish_end_date,
+        update_user=self.request.user
+    )
 
   def update(self, request, *arg, **kwargs):
     instance = self.get_object()
@@ -246,26 +268,8 @@ class SignageTimeScheduleListView(generics.ListAPIView):
         return TimeScheduleDetail.objects.none()
 
     try:
-      today = datetime.now()
-      weekday = today.weekday()
-      today_date = date.today()
-      # 土日の場合
-      if (weekday == 5) or (weekday == 6):
-        return TimeScheduleDetail.objects.filter(
+      return TimeScheduleDetail.objects.filter(
           time_schedule_id=time_schedule_id,
-          time_schedule__publish_holiday_flg=True,
-          time_schedule__publish_start_date__gte=today_date,
-          time_schedule__publish_end_date__lte=today_date,
-          time_schedule__publish_status_id=1
-        ).order_by('departure_time')
-      # 平日の場合
-      else:
-        return TimeScheduleDetail.objects.filter(
-          time_schedule_id=time_schedule_id,
-          time_schedule__publish_holiday_flg=False,
-          time_schedule__publish_start_date__gte=today_date,
-          time_schedule__publish_end_date__lte=today_date,
-          time_schedule__publish_status_id=1
         ).order_by('departure_time')
     except ValueError as e:
       return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
@@ -280,8 +284,10 @@ class SignageTimeScheduleListView(generics.ListAPIView):
     time_schedule_serializer = None
 
     if time_schedule_id and operation_rule_id:
-      today = datetime.now()
+      jst = pytz.timezone('Asia/Tokyo')
+      today = datetime.now(tz=jst)
       weekday = today.weekday()
+      today_date = today
       # 土日の場合
       if (weekday == 5) or (weekday == 6):
         time_schedule = TimeSchedule.objects.filter(
@@ -289,8 +295,10 @@ class SignageTimeScheduleListView(generics.ListAPIView):
                   operation_rule_id=operation_rule_id,
                   publish_holiday_flg=True,
                   publish_status_id=1).first()
-        
         if time_schedule:
+          publish_start_date_jst = localtime(time_schedule.publish_start_date, jst)
+          publish_end_date_jst = localtime(time_schedule.publish_end_date, jst)
+          if publish_start_date_jst <= today_date <= publish_end_date_jst:
             time_schedule_serializer = TimeScheduleSerializer(time_schedule)
       # 平日の場合
       else:
@@ -299,15 +307,20 @@ class SignageTimeScheduleListView(generics.ListAPIView):
                   operation_rule_id=operation_rule_id,
                   publish_holiday_flg=False,
                   publish_status_id=1).first()
-
         if time_schedule:
+          publish_start_date_jst = localtime(time_schedule.publish_start_date, jst)
+          publish_end_date_jst = localtime(time_schedule.publish_end_date, jst)
+          if publish_start_date_jst <= today_date <= publish_end_date_jst:
             time_schedule_serializer = TimeScheduleSerializer(time_schedule)
 
     print("Throwing data:", serializer.data)
     print("Throwing data:", time_schedule_serializer.data if time_schedule_serializer else None)
+    time_schedule_serializer_data = None
+    if time_schedule_serializer:
+      time_schedule_serializer_data = time_schedule_serializer.data
 
     return Response({
-      'time_schedule': time_schedule_serializer.data if time_schedule else None,
+      'time_schedule': time_schedule_serializer_data if time_schedule else None,
       'scheduleDetails': serializer.data
     }, status=status.HTTP_200_OK)
 
