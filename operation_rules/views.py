@@ -333,43 +333,46 @@ class SignageNextDepartureListView(generics.ListAPIView):
   def get_queryset(self):
     operation_rule_id = self.kwargs['operation_rule_id']
     destination = self.kwargs['destination']
-    now = timezone.localtime(timezone.now()).time().strftime('%H:%M')
 
     operation_rule = get_object_or_404(OperationRule, id=operation_rule_id)
 
-    today = datetime.now()
+    jst = pytz.timezone('Asia/Tokyo')
+    today = datetime.now(tz=jst)
     weekday = today.weekday()
-    today_date = date.today()
+    now = datetime.now(jst)
+    current_time = now.time()
     time_schedules = None
 
-    if (weekday == 5) or (weekday == 6):
-      time_schedules = TimeSchedule.objects.filter(
-              operation_rule=operation_rule,
-              destination=destination,
-              publish_holiday_flg=True,
-              time_schedule__publish_start_date__gte=today_date,
-              time_schedule__publish_end_date__lte=today_date,
-              publish_status_id=1)
-      print('Got time_schedule', time_schedules)
-    else:
-      time_schedules = TimeSchedule.objects.filter(
+    publish_holiday_flg = weekday == 5 or weekday == 6
+
+    time_schedules_sub = TimeSchedule.objects.filter(
             operation_rule=operation_rule,
             destination=destination,
-            publish_holiday_flg=False,
-            time_schedule__publish_start_date__gte=today_date,
-            time_schedule__publish_end_date__lte=today_date,
+            publish_holiday_flg=publish_holiday_flg,
             publish_status_id=1)
-      print('Got time_schedule', time_schedules)
+    print('Got time_schedule', time_schedules_sub)
 
-    time_schedule_details = TimeScheduleDetail.objects.filter(
-        time_schedule__in=time_schedules,
-        operation_status=1,
-        departure_time__gt=now
-    ).order_by('departure_time')
-    print('Got time_schedule_details', time_schedule_details)
+    for t in time_schedules_sub:
+      publish_start_date = t.publish_start_date.astimezone(jst)
+      publish_end_date = t.publish_end_date.astimezone(jst)
+
+      if publish_start_date <= now <= publish_end_date:
+        time_schedules = TimeSchedule.objects.filter(
+              operation_rule=operation_rule,
+              destination=destination,
+              publish_holiday_flg=publish_holiday_flg,
+              publish_status_id=1)
+
+    time_schedule_details = None
+    if time_schedules:
+      time_schedule_details = TimeScheduleDetail.objects.filter(
+          time_schedule__in=time_schedules,
+          operation_status=1,
+          departure_time__gt=current_time
+      ).order_by('departure_time')
 
     # 現在の時刻よりも直後の時刻を取得
-    if time_schedule_details.exists():
+    if time_schedule_details:
         # 最初のレコードを取得
         first_departure = time_schedule_details.first()
         return TimeScheduleDetail.objects.filter(
