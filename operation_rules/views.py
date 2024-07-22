@@ -316,12 +316,14 @@ class SignageTimeScheduleListView(generics.ListAPIView):
     print("Throwing data:", serializer.data)
     print("Throwing data:", time_schedule_serializer.data if time_schedule_serializer else None)
     time_schedule_serializer_data = None
+    time_schedule_detail_data = []
     if time_schedule_serializer:
       time_schedule_serializer_data = time_schedule_serializer.data
+      time_schedule_detail_data = serializer.data
 
     return Response({
       'time_schedule': time_schedule_serializer_data if time_schedule else None,
-      'scheduleDetails': serializer.data
+      'scheduleDetails': time_schedule_detail_data
     }, status=status.HTTP_200_OK)
 
 # デジタルサイネージ用次の出発時刻データ取得
