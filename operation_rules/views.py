@@ -62,7 +62,7 @@ class TimeScheduleListView(generics.ListAPIView):
       raise ValueError("idパラメータが不正です")
 
     try:
-      return TimeSchedule.objects.filter(operation_rule_id=operation_rule_id, delete_flg=False)
+      return TimeSchedule.objects.filter(operation_rule_id=operation_rule_id, delete_flg=False).order_by('-publish_status_id')
     except ValueError as e:
       return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
 
@@ -94,7 +94,7 @@ class TimeScheduleDetailListView(generics.ListAPIView):
       raise ValueError("idパラメータが不正です")
 
     try:
-      return TimeScheduleDetail.objects.filter(time_schedule_id=time_schedule_id)
+      return TimeScheduleDetail.objects.filter(time_schedule_id=time_schedule_id).order_by('departure_time')
     except ValueError as e:
       return Response(str(e), status=status.HTTP_400_BAD_REQUEST)
     
