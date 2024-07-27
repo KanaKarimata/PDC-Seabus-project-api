@@ -10,7 +10,7 @@ SECRET_KEY = env('SECRET_KEY')
 
 DEBUG = False
 
-ALLOWED_HOSTS = ['https://api.candidree.com']
+ALLOWED_HOSTS = ['api.candidree.com']
 
 CORS_ALLOWED_ORIGINS = [
   "https://candidree.com",
