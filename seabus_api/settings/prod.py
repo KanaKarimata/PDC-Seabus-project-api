@@ -10,11 +10,11 @@ SECRET_KEY = env('SECRET_KEY')
 
 DEBUG = False
 
-ALLOWED_HOSTS = ['localhost', '127.0.0.1']
+ALLOWED_HOSTS = ['https://candidree.com', 'https://www.candidree.com']
 
 CORS_ALLOWED_ORIGINS = [
-  "http://localhost:8080",
-  "http://localhost:8081",
+  "https://candidree.com",
+  "https://www.candidree.com",
 ]
 
 DATABASES['default'] = {
