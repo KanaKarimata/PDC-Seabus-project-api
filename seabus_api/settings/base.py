@@ -18,7 +18,7 @@ import environ
 print(os.getenv('DJANGO_ENV'))
 
 env = environ.Env()
-env_file = '.env.local' if os.getenv('DJANGO_ENV') == 'local' else '.env.production'
+env_file = '.env.local' if os.getenv('DJANGO_ENV') == 'local' else '.env.prod'
 environ.Env.read_env(env_file)
 
 print('DJANGO_ENV=', os.getenv('DJANGO_ENV') )
