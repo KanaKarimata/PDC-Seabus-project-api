@@ -25,3 +25,10 @@ DATABASES['default'] = {
     'HOST': env('DATABASE_HOST'),
     'PORT': env('DATABASE_PORT')
 }
+
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATIC_URL = '/static/'
+
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR, 'static'),
+]
