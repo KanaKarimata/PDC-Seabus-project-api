@@ -14,7 +14,7 @@ ALLOWED_HOSTS = ['api.candidree.com', 'candidree.com', 'www.candidree.com']
 
 CORS_ALLOWED_ORIGINS = [
   "https://candidree.com",
-  "https://www.candidree.com",
+  "https://signage.candidree.com",
 ]
 
 DATABASES['default'] = {
